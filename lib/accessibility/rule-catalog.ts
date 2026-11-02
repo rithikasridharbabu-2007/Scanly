@@ -151,6 +151,62 @@ export function explainFinding(
   };
 }
  
+// ---------- Adapter for the scanner's current output (PR #10, lib/types/scan.ts) ----------
+//
+// The scanner currently returns { url, timestamp, totalViolations, violations },
+// where each violation is { id, impact, description, helpUrl, affectedNodes, htmlSnippets }.
+// These functions convert that shape so the report can use it today.
+// If the scanner later adds axe-core's `tags`, `help`, or `incomplete` results,
+// they are picked up automatically.
+ 
+export interface ScannerViolation {
+  id: string;
+  impact?: string | null;
+  description: string;
+  helpUrl: string;
+  affectedNodes?: number;
+  htmlSnippets?: string[];
+  tags?: string[]; // axe-core tags, if the scanner adds them
+  help?: string; // axe-core short title, if the scanner adds it
+}
+ 
+export interface ScannerResult {
+  url: string;
+  timestamp: string;
+  totalViolations: number;
+  violations: ScannerViolation[];
+  incomplete?: ScannerViolation[]; // axe-core "needs review" items, if the scanner adds them
+}
+ 
+const IMPACTS: readonly string[] = ["minor", "moderate", "serious", "critical"];
+ 
+/** Convert one scanner violation into the shape explainFinding() expects. */
+export function fromScannerViolation(v: ScannerViolation): NormalizedViolation {
+  return {
+    ruleId: v.id,
+    impact: v.impact && IMPACTS.includes(v.impact) ? (v.impact as Impact) : null,
+    title: v.help ?? v.description,
+    description: v.description,
+    helpUrl: v.helpUrl,
+    wcagTags: v.tags ?? [],
+    affectedElements: (v.htmlSnippets ?? []).map((html) => ({ target: [], html })),
+  };
+}
+ 
+/** Explain a whole scan straight from the scanner's current output. */
+export function explainScannerResult(result: ScannerResult): {
+  url: string;
+  timestamp: string;
+  violations: ExplainedViolation[];
+  needsReview: ExplainedViolation[];
+} {
+  const explained = explainScan({
+    violations: result.violations.map(fromScannerViolation),
+    needsReview: (result.incomplete ?? []).map(fromScannerViolation),
+  });
+  return { url: result.url, timestamp: result.timestamp, ...explained };
+}
+ 
 /** Explain every finding from one scan, keeping violations and needs-review items separate. */
 export function explainScan(scan: {
   violations: NormalizedViolation[];
