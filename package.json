@@ -1,0 +1,27 @@
+{
+  "name": "scanly",
+  "version": "1.0.0",
+  "description": "Scanly is an AI-assisted web accessibility auditing tool that helps student developers and campus organizations identify common accessibility barriers on their websites.",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rithikasridharbabu-2007/Scanly.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/rithikasridharbabu-2007/Scanly/issues"
+  },
+  "homepage": "https://github.com/rithikasridharbabu-2007/Scanly#readme",
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^26.6.6"
+  }
+}
