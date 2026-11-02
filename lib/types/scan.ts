@@ -37,11 +37,16 @@ function normalizeResults(rawResults: AxeResults): NormalizedViolation[] {
  */
 export async function performFullScan(url: string): Promise<NormalizedScanResult> {
   const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage();
+  const context = await browser.newContext();
+  const page = await context.newPage();
 
   try {
-    // Navigate to the target URL and wait for network activity to settle
-    await page.goto(url, { waitUntil: 'networkidle' });
+    // Start scanning once the document is loaded. Some sites keep analytics
+    // or other background requests open indefinitely, so networkidle can hang.
+    await page.goto(url, {
+      waitUntil: 'domcontentloaded',
+      timeout: 30000,
+    });
 
     // 1. Delegate the actual scanning to axe-runner
     const rawResults = await runAxeScan(page);
@@ -58,6 +63,7 @@ export async function performFullScan(url: string): Promise<NormalizedScanResult
     };
     
   } finally {
+    await context.close();
     await browser.close();
   }
 }
