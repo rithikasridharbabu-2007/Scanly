@@ -6,11 +6,12 @@ test('URL validation, sample report, and another submission', async ({ page }) =
   await page.goto('/');
   const input = page.getByLabel('Website URL');
   const submit = page.getByRole('button', { name: 'Scan website' });
+  const validationError = page.locator('form').getByRole('alert');
   await submit.click();
-  await expect(page.getByRole('alert')).toContainText('valid website URL');
+  await expect(validationError).toContainText('valid website URL');
   await input.fill('not-a-url');
   await submit.click();
-  await expect(page.getByRole('alert')).toBeVisible();
+  await expect(validationError).toBeVisible();
   await input.fill('https://example.com');
   await submit.click();
   await expect(page.getByRole('status')).toContainText('Scanning');
