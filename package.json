@@ -1,19 +1,25 @@
 {
-  "name": "scanly-temp",
+  "name": "scanly",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "type-check": "next typegen && tsc --noEmit",
+    "test": "playwright test"
   },
   "dependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "axe-core": "4.14.0",
+    "playwright": "1.64.1",
     "next": "16.4.4",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.1",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
