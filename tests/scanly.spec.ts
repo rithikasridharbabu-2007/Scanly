@@ -38,7 +38,7 @@ test('combined app exposes backend routes and validates scan requests', async ({
 });
 
 test('scanner findings receive catalog guidance without changing engine facts', async ({ page }) => {
-  await page.setContent('<!doctype html><html lang="en"><head><title>Scanner fixture</title></head><body><main><h1>Test</h1><img src="data:image/png;base64,AA=="><button></button><input type="text"></main></body></html>');
+  await page.goto('/fixtures/broken.html');
   const raw = await runAxeScan(page);
   expect(raw.violations.map(v => v.id)).toEqual(expect.arrayContaining(['image-alt', 'button-name', 'label']));
   const result = explainScannerResult({
