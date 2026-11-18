@@ -155,3 +155,7 @@ vite.config.ts.timestamp-*
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# Persistent scan queue and SQLite WAL sidecars
+*.sqlite
+*.sqlite-*

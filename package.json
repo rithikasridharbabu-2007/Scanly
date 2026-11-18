@@ -8,25 +8,33 @@
     "start": "next start",
     "lint": "eslint",
     "type-check": "next typegen && tsc --noEmit",
-    "test": "playwright test"
+    "test": "playwright test",
+    "worker": "tsx lib/workers/scanner.ts",
+    "test:queue": "tsx --test tests/queue/*.test.ts",
+    "db:migrate": "tsx lib/queue/migrate.ts"
   },
   "dependencies": {
     "@axe-core/playwright": "4.14.0",
     "axe-core": "4.14.0",
+    "ipaddr.js": "^2.5.0",
+    "next": "16.4.6",
     "playwright": "1.64.1",
-    "next": "16.4.4",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "tsx": "^4.23.15"
   },
   "devDependencies": {
     "@playwright/test": "1.64.1",
     "@tailwindcss/turbopack": "^4",
-    "@types/node": "^20",
+    "@types/node": "^22.19.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.4.4",
+    "eslint-config-next": "16.4.6",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=22.19.0"
   }
 }
