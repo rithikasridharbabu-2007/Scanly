@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
-import { performFullScan, type NormalizedScanResult } from '../../../../lib/types/scan';
+import { buildScanReport, type ScanReport } from '../../../../lib/accessibility/rule-catalog';
 
 type ScanRecord =
   | { status: 'pending'; requestedUrl: string }
-  | { status: 'completed'; requestedUrl: string; result: NormalizedScanResult }
+  | {
+      status: 'completed';
+      requestedUrl: string;
+      result: NormalizedScanResult;
+      // Plain-language explanations attached to the findings above.
+      report: ScanReport;
+    }
   | {
       status: 'failed';
       requestedUrl: string;
@@ -70,8 +76,12 @@ export async function POST(request: Request) {
   // Start the scan without making the client wait for Playwright to finish.
   void performFullScan(requestedUrl)
     .then(result => {
-      scans.set(scanId, { status: 'completed', requestedUrl, result });
-    })
+    scans.set(scanId, {
+        status: 'completed',
+        requestedUrl,
+        result,
+        report: buildScanReport(result),
+      });    })
     .catch(error => {
       const message = error instanceof Error ? error.message : String(error);
       console.error(`Scan ${scanId} failed: ${message}`);
@@ -105,8 +115,12 @@ export async function GET(request: Request) {
   }
 
   if (scan.status === 'completed') {
-    return NextResponse.json({ scanId, status: scan.status, result: scan.result });
-  }
+    return NextResponse.json({
+      scanId,
+      status: scan.status,
+      result: scan.result,
+      report: scan.report,
+    });  }
 
   return NextResponse.json({ scanId, ...scan }, {
     status: scan.status === 'failed' ? 500 : 200,
