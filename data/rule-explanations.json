@@ -1,15 +1,15 @@
 {
-  "catalogVersion": "0.1.0",
-  "axeCoreVersion": "4.13",
-  "updatedAt": "2026-11-02",
-  "notes": "Plain-language explanations keyed by axe-core rule ID. Written by hand for the mid-semester prototype (no live LLM). Impact is NOT stored here: it always comes from the live axe-core scan. Every entry stays 'pending_review' until a teammate checks it against sourceUrl with the review rubric.",
+  "catalogVersion": "0.2.0",
+  "axeCoreVersion": "4.14",
+  "updatedAt": "2026-11-17",
+  "notes": "Plain-language explanations keyed by axe-core rule ID. Written by hand (no live LLM). Impact is NOT stored here: it always comes from the live axe-core scan. WCAG criteria and best-practice flags were checked against axe-core 4.14 rule metadata; wording was checked against the Deque rule pages and W3C Understanding WCAG pages listed in each entry's checkedAgainst. Entries stay 'pending_review' until a teammate approves them with the review rubric.",
   "rules": {
     "image-alt": {
       "ruleId": "image-alt",
       "plainTitle": "An image has no text description",
       "plainLanguageSummary": "This image has no alternative (alt) text, so people who can't see it get no information about what it shows.",
-      "whoIsAffected": ["Blind users", "Screen-reader users", "People browsing with images turned off"],
-      "whyItMatters": "Screen readers read an image's alt text out loud. With no alt attribute, the screen reader may read the file name (like \"IMG_4032.jpg\") or skip the image, so the user misses what it means.",
+      "whoIsAffected": ["Blind users", "Deafblind users", "Screen-reader users"],
+      "whyItMatters": "Screen readers read an image's alt text out loud. With no alt attribute, a screen reader will often read the file name instead (like \"IMG_4032.jpg\"), so the user misses what the image means.",
       "suggestedFix": "Add an alt attribute that describes what the image communicates, in a short phrase. If the image is only decoration, use an empty alt (alt=\"\") so screen readers skip it.",
       "exampleFix": {
         "before": "<img src=\"club-photo.jpg\">",
@@ -18,7 +18,11 @@
       "manualCheck": "Scanly can tell alt text is missing, but not whether alt text you add is accurate. Read your alt text and ask: would someone who can't see the image understand its purpose?",
       "wcagCriteria": [{ "id": "1.1.1", "name": "Non-text Content", "level": "A" }],
       "isBestPractice": false,
-      "sourceUrl": "https://dequeuniversity.com/rules/axe/4.13/image-alt",
+      "sourceUrl": "https://dequeuniversity.com/rules/axe/4.14/image-alt",
+      "checkedAgainst": [
+        "https://dequeuniversity.com/rules/axe/4.9/image-alt",
+        "https://www.w3.org/WAI/WCAG22/Understanding/non-text-content"
+      ],
       "reviewStatus": "pending_review"
     },
 
@@ -27,8 +31,8 @@
       "plainTitle": "Text is hard to read against its background",
       "plainLanguageSummary": "The text color is too close to the background color, which makes it hard to read.",
       "needsReviewSummary": "Scanly couldn't measure this text's contrast automatically, often because it sits on a background image or gradient. Check by eye or with a contrast checker whether the text is easy to read.",
-      "whoIsAffected": ["Low-vision users", "Color-blind users", "Anyone reading on a phone in bright light"],
-      "whyItMatters": "Text needs enough contrast with its background to be readable. WCAG sets a minimum contrast ratio of 4.5:1 for normal text and 3:1 for large text.",
+      "whoIsAffected": ["Low-vision users", "Color-blind users"],
+      "whyItMatters": "Text needs enough contrast with its background to be readable. WCAG sets a minimum contrast ratio of 4.5:1 for normal text and 3:1 for large text (about 18pt, or 14pt bold).",
       "suggestedFix": "Make the text darker or the background lighter (or the reverse) until the contrast ratio meets the minimum. Check your new colors with a contrast checker before you commit them.",
       "exampleFix": {
         "before": ".event-date { color: #999999; } /* on white: about 2.8:1, too low */",
@@ -37,7 +41,10 @@
       "manualCheck": null,
       "wcagCriteria": [{ "id": "1.4.3", "name": "Contrast (Minimum)", "level": "AA" }],
       "isBestPractice": false,
-      "sourceUrl": "https://dequeuniversity.com/rules/axe/4.13/color-contrast",
+      "sourceUrl": "https://dequeuniversity.com/rules/axe/4.14/color-contrast",
+      "checkedAgainst": [
+        "https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html"
+      ],
       "reviewStatus": "pending_review"
     },
 
@@ -45,8 +52,8 @@
       "ruleId": "label",
       "plainTitle": "A form field has no label",
       "plainLanguageSummary": "This form field has no label connected to it, so assistive technology can't announce what the field is for.",
-      "whoIsAffected": ["Screen-reader users", "Voice-control users"],
-      "whyItMatters": "When a screen reader reaches an unlabeled field, it may only say \"edit text,\" with no hint of what to type. Without a label, someone can't reliably fill in the form.",
+      "whoIsAffected": ["Blind users", "Low-vision users", "Screen-reader users", "People with limited motor control"],
+      "whyItMatters": "Screen readers announce a field's label so users know what to type. Without one, they can't tell what the field is for. A connected label can also be clicked to select the field, which gives people with limited motor control a bigger target.",
       "suggestedFix": "Add a <label> element and connect it to the field by making the label's for attribute match the field's id. Placeholder text alone is not a label, because it disappears when you start typing.",
       "exampleFix": {
         "before": "<input type=\"email\" placeholder=\"Email\">",
@@ -55,16 +62,19 @@
       "manualCheck": null,
       "wcagCriteria": [{ "id": "4.1.2", "name": "Name, Role, Value", "level": "A" }],
       "isBestPractice": false,
-      "sourceUrl": "https://dequeuniversity.com/rules/axe/4.13/label",
+      "sourceUrl": "https://dequeuniversity.com/rules/axe/4.14/label",
+      "checkedAgainst": [
+        "https://dequeuniversity.com/rules/axe/4.8/label"
+      ],
       "reviewStatus": "pending_review"
     },
 
     "button-name": {
       "ruleId": "button-name",
       "plainTitle": "A button has no name",
-      "plainLanguageSummary": "This button has no text or label that says what it does, so assistive technology announces it as just \"button.\"",
-      "whoIsAffected": ["Screen-reader users", "Voice-control users"],
-      "whyItMatters": "Icon-only buttons (like a magnifying glass or an X) look clear on screen, but a screen reader can't describe the icon. Users hear \"button\" and have to guess what pressing it will do.",
+      "plainLanguageSummary": "This button has no text or label that says what it does, so a screen reader can't tell users its purpose.",
+      "whoIsAffected": ["Blind users", "Deafblind users", "Screen-reader users"],
+      "whyItMatters": "A screen reader needs text to tell users what a button does. Without it, users have to guess what pressing it will do. Icon-only buttons, like a magnifying glass or an X, are a common cause.",
       "suggestedFix": "Put visible text inside the button. If the button must show only an icon, add an aria-label that says what it does.",
       "exampleFix": {
         "before": "<button><svg class=\"icon-search\">...</svg></button>",
@@ -73,20 +83,23 @@
       "manualCheck": null,
       "wcagCriteria": [{ "id": "4.1.2", "name": "Name, Role, Value", "level": "A" }],
       "isBestPractice": false,
-      "sourceUrl": "https://dequeuniversity.com/rules/axe/4.13/button-name",
+      "sourceUrl": "https://dequeuniversity.com/rules/axe/4.14/button-name",
+      "checkedAgainst": [
+        "https://dequeuniversity.com/rules/axe/4.11/button-name"
+      ],
       "reviewStatus": "pending_review"
     },
 
     "link-name": {
       "ruleId": "link-name",
       "plainTitle": "A link has no name",
-      "plainLanguageSummary": "This link has no text that says where it goes, so assistive technology can't tell users its purpose.",
-      "whoIsAffected": ["Screen-reader users", "Voice-control users"],
-      "whyItMatters": "Screen-reader users often jump from link to link to find what they need. A link with no text may be read as just \"link\" or as a long web address, so they can't tell where it leads.",
+      "plainLanguageSummary": "This link has no text that says where it goes, so a screen reader can't tell users its purpose.",
+      "whoIsAffected": ["Blind users", "Deafblind users", "Screen-reader users"],
+      "whyItMatters": "Screen readers use a link's text to tell users where it goes. A link with no text they can access, such as an image link without alt text, gives no clue where it leads.",
       "suggestedFix": "Give the link visible text that describes where it goes. For an image or icon link (like a social media icon), add alt text to the image or an aria-label to the link.",
       "exampleFix": {
-        "before": "<a href=\"https://instagram.com/sjsurobotics\"><img src=\"ig.svg\"></a>",
-        "after": "<a href=\"https://instagram.com/sjsurobotics\"><img src=\"ig.svg\" alt=\"Robotics Club on Instagram\"></a>"
+        "before": "<a href=\"https://instagram.com/yourclub\"><img src=\"ig.svg\"></a>",
+        "after": "<a href=\"https://instagram.com/yourclub\"><img src=\"ig.svg\" alt=\"Our club on Instagram\"></a>"
       },
       "manualCheck": null,
       "wcagCriteria": [
@@ -94,16 +107,19 @@
         { "id": "4.1.2", "name": "Name, Role, Value", "level": "A" }
       ],
       "isBestPractice": false,
-      "sourceUrl": "https://dequeuniversity.com/rules/axe/4.13/link-name",
+      "sourceUrl": "https://dequeuniversity.com/rules/axe/4.14/link-name",
+      "checkedAgainst": [
+        "https://dequeuniversity.com/rules/axe/4.9/link-name"
+      ],
       "reviewStatus": "pending_review"
     },
 
     "html-has-lang": {
       "ruleId": "html-has-lang",
       "plainTitle": "The page doesn't say what language it's in",
-      "plainLanguageSummary": "The page is missing a lang attribute, so screen readers have to guess which language to read it in.",
-      "whoIsAffected": ["Screen-reader users", "People using translation tools"],
-      "whyItMatters": "Screen readers use the page language to choose the right pronunciation. If they guess wrong, English text may be read with another language's rules and become hard to understand.",
+      "plainLanguageSummary": "The page is missing a lang attribute, so screen readers don't know which language to read it in.",
+      "whoIsAffected": ["Screen-reader users", "People who use text-to-speech", "People with cognitive or learning disabilities who use text-to-speech"],
+      "whyItMatters": "Screen readers use the page language to choose the right pronunciation. Without it, they fall back to the user's default language, which can make the text very hard to understand.",
       "suggestedFix": "Add a lang attribute to the <html> tag at the top of the page, using the page's main language code (for example, \"en\" for English).",
       "exampleFix": {
         "before": "<html>",
@@ -112,7 +128,11 @@
       "manualCheck": "Make sure the language code matches the language the page is actually written in.",
       "wcagCriteria": [{ "id": "3.1.1", "name": "Language of Page", "level": "A" }],
       "isBestPractice": false,
-      "sourceUrl": "https://dequeuniversity.com/rules/axe/4.13/html-has-lang",
+      "sourceUrl": "https://dequeuniversity.com/rules/axe/4.14/html-has-lang",
+      "checkedAgainst": [
+        "https://dequeuniversity.com/rules/axe/4.8/html-has-lang",
+        "https://www.w3.org/WAI/WCAG21/Understanding/language-of-page"
+      ],
       "reviewStatus": "pending_review"
     },
 
@@ -120,9 +140,9 @@
       "ruleId": "document-title",
       "plainTitle": "The page has no title",
       "plainLanguageSummary": "The page is missing a <title>, so its browser tab and bookmarks have no name.",
-      "whoIsAffected": ["Screen-reader users", "People with cognitive disabilities", "Anyone with many tabs open"],
-      "whyItMatters": "The page title is the first thing a screen reader announces when a page opens. Without one, users can't quickly tell which page they're on or tell open tabs apart.",
-      "suggestedFix": "Add a short, unique <title> inside the <head> that describes the page, ideally with the page name first and the site name after.",
+      "whoIsAffected": ["Screen-reader users", "People with cognitive, memory, or reading disabilities", "Anyone with several pages open"],
+      "whyItMatters": "The page title is the first thing screen-reader users hear when a page loads. Without one, users can't quickly tell which page they're on or tell open pages apart.",
+      "suggestedFix": "Add a short, unique <title> inside the <head> that describes the page, with the page name first and the site name after.",
       "exampleFix": {
         "before": "<head>\n  <meta charset=\"utf-8\">\n</head>",
         "after": "<head>\n  <meta charset=\"utf-8\">\n  <title>Events | SJSU Robotics Club</title>\n</head>"
@@ -130,7 +150,11 @@
       "manualCheck": "Check that the title actually describes this page and is different from your site's other pages.",
       "wcagCriteria": [{ "id": "2.4.2", "name": "Page Titled", "level": "A" }],
       "isBestPractice": false,
-      "sourceUrl": "https://dequeuniversity.com/rules/axe/4.13/document-title",
+      "sourceUrl": "https://dequeuniversity.com/rules/axe/4.14/document-title",
+      "checkedAgainst": [
+        "https://dequeuniversity.com/rules/axe/4.7/document-title",
+        "https://www.w3.org/WAI/WCAG22/Understanding/page-titled"
+      ],
       "reviewStatus": "pending_review"
     },
 
@@ -139,7 +163,7 @@
       "plainTitle": "Headings skip a level",
       "plainLanguageSummary": "The headings jump levels (for example, from a main heading straight to a third-level heading), which makes the page outline confusing.",
       "whoIsAffected": ["Screen-reader users"],
-      "whyItMatters": "Many screen-reader users move through a page by its headings, like a table of contents. A skipped level makes it look like a section is missing.",
+      "whyItMatters": "Many screen-reader users move through a page by its headings to understand how it's organized. Skipping a level makes that structure harder to follow.",
       "suggestedFix": "Use heading levels in order: one <h1> for the page, <h2> for main sections, <h3> inside those. Choose the level by structure, then use CSS to change how big it looks.",
       "exampleFix": {
         "before": "<h1>Upcoming Events</h1>\n<h3>Fall Hackathon</h3>",
@@ -148,7 +172,10 @@
       "manualCheck": null,
       "wcagCriteria": [],
       "isBestPractice": true,
-      "sourceUrl": "https://dequeuniversity.com/rules/axe/4.13/heading-order",
+      "sourceUrl": "https://dequeuniversity.com/rules/axe/4.14/heading-order",
+      "checkedAgainst": [
+        "https://dequeuniversity.com/rules/axe/4.0/heading-order"
+      ],
       "reviewStatus": "pending_review"
     }
   }
