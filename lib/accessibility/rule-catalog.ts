@@ -9,21 +9,21 @@
 // - If a rule has no catalog entry, we fall back to axe-core's own text
 //   instead of making something up.
 // - "Needs review" findings are always marked for a manual check.
-
+ 
 import catalogFile from "../../data/rule-explanations.json" with { type: "json" };
-
+ 
 // ---------- Types ----------
-
+ 
 export type Impact = "minor" | "moderate" | "serious" | "critical";
 export type ResultType = "violation" | "needs_review";
 export type ReviewStatus = "approved" | "pending_review" | "fallback";
-
+ 
 export interface WcagCriterion {
   id: string; // e.g. "1.1.1"
   name: string; // e.g. "Non-text Content"
   level: "A" | "AA" | "AAA";
 }
-
+ 
 export interface CatalogEntry {
   ruleId: string;
   plainTitle: string;
@@ -38,6 +38,8 @@ export interface CatalogEntry {
   wcagCriteria: WcagCriterion[];
   isBestPractice: boolean;
   sourceUrl: string;
+  /** Official pages this entry's wording was checked against. */
+  checkedAgainst?: string[];
   reviewStatus: ReviewStatus;
 }
 
@@ -51,7 +53,7 @@ export interface NormalizedViolation {
   wcagTags: string[];
   affectedElements: { target: string[]; html: string; failureSummary?: string }[];
 }
-
+ 
 export interface Explanation {
   plainTitle: string;
   plainLanguageSummary: string;
@@ -66,28 +68,28 @@ export interface Explanation {
   sourceUrl: string;
   reviewStatus: ReviewStatus;
 }
-
+ 
 export type ExplainedViolation = NormalizedViolation & {
   resultType: ResultType;
   explanation: Explanation;
 };
-
+ 
 // ---------- Catalog ----------
-
+ 
 const catalog = catalogFile.rules as Record<string, CatalogEntry>;
-
+ 
 /** Returns the catalog entry for a rule, or undefined if there isn't one yet. */
 export function getCatalogEntry(ruleId: string): CatalogEntry | undefined {
   return Object.hasOwn(catalog, ruleId) ? catalog[ruleId] : undefined;
 }
-
+ 
 /** Rule IDs the catalog currently covers. */
 export function listCoveredRules(): string[] {
   return Object.keys(catalog);
 }
-
+ 
 // ---------- Main function ----------
-
+ 
 /**
  * Attach a plain-language explanation to one normalized axe-core finding.
  *
@@ -102,30 +104,10 @@ export function explainFinding(
   const entry = getCatalogEntry(violation.ruleId);
   const isBestPractice = violation.wcagTags.includes("best-practice");
 
-  if (!entry) {
-    // No reviewed text yet: show axe-core's own words. Never invent an explanation.
-    return {
-      ...violation,
-      resultType,
-      explanation: {
-        plainTitle: violation.title,
-        plainLanguageSummary: violation.description,
-        whoIsAffected: [],
-        whyItMatters: "A plain-language explanation isn't available yet for this issue.",
-        suggestedFix: "See the linked guide for how to fix this issue.",
-        exampleFix: null,
-        manualCheckNeeded: resultType === "needs_review",
-        manualCheck: null,
-        wcagCriteria: [],
-        isBestPractice,
-        sourceUrl: violation.helpUrl,
-        reviewStatus: "fallback",
-      },
-    };
-  }
-
+  if (!entry) return fallbackFinding(violation, resultType);
+ 
   const needsReview = resultType === "needs_review";
-
+ 
   return {
     ...violation, // ruleId, impact, wcagTags, helpUrl stay exactly as axe-core reported them
     resultType,
@@ -151,6 +133,34 @@ export function explainFinding(
   };
 }
 
+/**
+ * Used when a rule has no catalog entry yet: shows axe-core's own words.
+ * Never invents an explanation.
+ */
+export function fallbackFinding(
+  violation: NormalizedViolation,
+  resultType: ResultType = "violation",
+): ExplainedViolation {
+  return {
+    ...violation,
+    resultType,
+    explanation: {
+      plainTitle: violation.title,
+      plainLanguageSummary: violation.description,
+      whoIsAffected: [],
+      whyItMatters: "A plain-language explanation isn't available yet for this issue.",
+      suggestedFix: "See the linked guide for how to fix this issue.",
+      exampleFix: null,
+      manualCheckNeeded: resultType === "needs_review",
+      manualCheck: null,
+      wcagCriteria: [],
+      isBestPractice: violation.wcagTags.includes("best-practice"),
+      sourceUrl: violation.helpUrl,
+      reviewStatus: "fallback",
+    },
+  };
+}
+
 // ---------- Adapter for the scanner's current output (PR #10, lib/types/scan.ts) ----------
 //
 // The scanner currently returns { url, timestamp, totalViolations, violations },
@@ -158,7 +168,7 @@ export function explainFinding(
 // These functions convert that shape so the report can use it today.
 // If the scanner later adds axe-core's `tags`, `help`, or `incomplete` results,
 // they are picked up automatically.
-
+ 
 export interface ScannerViolation {
   id: string;
   impact?: string | null;
@@ -168,6 +178,8 @@ export interface ScannerViolation {
   htmlSnippets?: string[];
   tags?: string[]; // axe-core tags, if the scanner adds them
   help?: string; // axe-core short title, if the scanner adds it
+  // Full element details, if the scanner adds them (preferred over htmlSnippets).
+  affectedElements?: { target: string[]; html: string; failureSummary?: string }[];
 }
 
 export interface ScannerResult {
@@ -175,11 +187,13 @@ export interface ScannerResult {
   timestamp: string;
   totalViolations: number;
   violations: ScannerViolation[];
-  incomplete?: ScannerViolation[]; // axe-core "needs review" items, if the scanner adds them
+  // axe-core "needs review" items, if the scanner adds them (either name works).
+  incomplete?: ScannerViolation[];
+  needsReview?: ScannerViolation[];
 }
-
+ 
 const IMPACTS: readonly string[] = ["minor", "moderate", "serious", "critical"];
-
+ 
 /** Convert one scanner violation into the shape explainFinding() expects. */
 export function fromScannerViolation(v: ScannerViolation): NormalizedViolation {
   return {
@@ -189,10 +203,11 @@ export function fromScannerViolation(v: ScannerViolation): NormalizedViolation {
     description: v.description,
     helpUrl: v.helpUrl,
     wcagTags: v.tags ?? [],
-    affectedElements: (v.htmlSnippets ?? []).map((html) => ({ target: [], html })),
+    affectedElements:
+      v.affectedElements ?? (v.htmlSnippets ?? []).map((html) => ({ target: [], html })),
   };
 }
-
+ 
 /** Explain a whole scan straight from the scanner's current output. */
 export function explainScannerResult(result: ScannerResult): {
   url: string;
@@ -202,11 +217,60 @@ export function explainScannerResult(result: ScannerResult): {
 } {
   const explained = explainScan({
     violations: result.violations.map(fromScannerViolation),
-    needsReview: (result.incomplete ?? []).map(fromScannerViolation),
+    needsReview: (result.incomplete ?? result.needsReview ?? []).map(fromScannerViolation),
   });
   return { url: result.url, timestamp: result.timestamp, ...explained };
 }
 
+// ---------- Report for the scan API ----------
+
+export interface ScanReport {
+  url: string;
+  timestamp: string;
+  /** False only if attaching explanations failed; findings then show axe-core's own text. */
+  explanationsAvailable: boolean;
+  summary: Record<Impact, number> & { needsReview: number };
+  violations: ExplainedViolation[];
+  needsReview: ExplainedViolation[];
+}
+
+/**
+ * Builds the report the scan API returns: every finding with its explanation,
+ * confirmed violations and needs-review items kept in separate lists.
+ * Never throws, so a problem with explanations can't make a finished scan fail.
+ */
+export function buildScanReport(result: ScannerResult): ScanReport {
+  let explained: { violations: ExplainedViolation[]; needsReview: ExplainedViolation[] };
+  let explanationsAvailable = true;
+
+  try {
+    explained = explainScannerResult(result);
+  } catch (error) {
+    console.error("Could not attach explanations:", error);
+    explanationsAvailable = false;
+    explained = {
+      violations: result.violations.map((v) => fallbackFinding(fromScannerViolation(v), "violation")),
+      needsReview: (result.incomplete ?? result.needsReview ?? []).map((v) =>
+        fallbackFinding(fromScannerViolation(v), "needs_review"),
+      ),
+    };
+  }
+
+  const summary = { critical: 0, serious: 0, moderate: 0, minor: 0, needsReview: explained.needsReview.length };
+  for (const finding of explained.violations) {
+    if (finding.impact) summary[finding.impact] += 1;
+  }
+
+  return {
+    url: result.url,
+    timestamp: result.timestamp,
+    explanationsAvailable,
+    summary,
+    violations: explained.violations,
+    needsReview: explained.needsReview,
+  };
+}
+ 
 /** Explain every finding from one scan, keeping violations and needs-review items separate. */
 export function explainScan(scan: {
   violations: NormalizedViolation[];
